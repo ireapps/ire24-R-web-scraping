@@ -8,8 +8,8 @@ Get to know the structure of an HTML element - [https://developer.mozilla.org/en
    - attributes `ex: id="shazam" inside the tag <p id="shazam">`
    - text `ex: <p>The text between opening and closing tags</p>`
 
-A table built into HTML:
-![](https://github.com/ireapps/ire24-R-web-scraping/blob/main/html-table.png)
+A **table** built into HTML:\
+![](https://github.com/ireapps/ire24-R-web-scraping/blob/main/images/html-table.png)
 
 
 ### Basic usage of functions in rvest
