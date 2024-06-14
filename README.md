@@ -8,7 +8,8 @@ Get to know the structure of an HTML element - [https://developer.mozilla.org/en
    - attributes `ex: id="shazam" inside the tag <p id="shazam">`
    - text `ex: <p>The text between opening and closing tags</p>`
 
-A **table** built into HTML:\
+A **table** built into HTML uses a **\<table>** tag. The **\<th>** tag is used for the header row; **\<tr>** for table row, **\<td>** for table data:
+\
 ![](https://github.com/ireapps/ire24-R-web-scraping/blob/main/images/html-table.png)
 
 
