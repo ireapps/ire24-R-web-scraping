@@ -1,6 +1,11 @@
 # Web Scraping in R -- IRE2024
 The basics of scraping web pages in R using rvest
 
+### Requirements for the class
+-   [R and RStudio installed]()
+-   tidyverse and rvest installed: `install.packages(c("tidyverse","rvest"))`
+-   A browser with development tools (such as Chrome Inpsect)
+
 ### Basics of HTML structure
 Get to know the structure of an HTML element - [https://developer.mozilla.org/en-US/docs/Glossary/Element](https://developer.mozilla.org/en-US/docs/Glossary/Element)
 	
@@ -38,3 +43,8 @@ ex. `everything_inside_a_p_tag |> html_text2()`
 3 [https://www.billboard.com/charts/hot-100/](https://www.billboard.com/charts/hot-100/)
 
 You'll find the finished scripts in the [finished_scripts](/finished_scripts) folder.
+
+### Resources for help
+
+-   check out Hadley Wickham's [tutorial on web scraping](https://www.r-bloggers.com/2020/04/tutorial-web-scraping-in-r-with-rvest/)
+-   here's an [IRE tipsheet](https://docs.google.com/document/d/1Nd_X3Ee02xxMvKe0qwZWikD53ZSEL-x14nHihQEI-sk/edit?usp=sharing) on using browser development tools (such as Chrome Inspect)
