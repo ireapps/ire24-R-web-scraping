@@ -1,0 +1,109 @@
+---
+title: "Scrape 1"
+output: 
+---
+
+Scrape the 2024 warn notices for the state of Maryland, from [https://www.dllr.state.md.us/employment/warn.shtml](https://www.dllr.state.md.us/employment/warn.shtml](https://www.dllr.state.md.us/employment/warn.shtml](https://www.dllr.state.md.us/employment/warn.shtml).
+
+If you need to install these packages, run the following code chunk: 
+```{r}
+install.packages(c("tidyverse","rvest","janitor"))
+```
+
+Load the packages:
+```{r}
+library(tidyverse)
+library(rvest)
+library(janitor)
+```
+
+### Step One: read the html table from the main page
+
+Read the source HTML from the webpage:
+```{r}
+
+```
+
+
+For this website, the data is conveniently inside of a <table> tag, so that's the element you'll pull:
+```{r}
+
+```
+
+This pulls everything inside the table tag: thankfully you don't have to do much to parse this, other than use the html_table() function. 
+
+```{r}
+
+```
+
+Note that the header row is part of the data. This is because those values aren't baked into <th> tags (which indicate table header), but regular <tr> tags (table row). So add an argument to html_table() so it recognizes the first row as a header: 
+```{r}
+# test it out
+
+
+# make it permanent
+
+
+```
+
+We need to do a few things to clean up this table: 
+-   If you look at `Company`, `Location`, and `Local Area` you'll see there are `\r\n` characters baked in; you can use the stringr package (in tidyverse) to clean those up. 
+-   I also like to standardize column names so they don't have spaces or capital letters, using the clean_names() function from the janitor package.
+-   Turn every column to character (trust me on this, it will make sense later): 
+```{r}
+# test it out: remove white space using str_squish()
+table |> 
+  mutate(Company = str_squish(Company), 
+         Location = str_squish(Location),
+         `Local Area` = str_squish(`Local Area`))
+
+# test it out: cleaning header row using clean_names()
+table |> 
+  clean_names()
+
+# test it out: turning everything to character
+table |> 
+  mutate(across(1:8, as.character))
+```
+
+
+```{r}
+# make it permanent
+
+```
+
+
+### Step Two: scrape multiple pages
+
+Notice at the bottom of the page there is a gray bar that says "Work Adjustment and Retraining Notifications (WARN)"; when you click the bar it expands to show you more years of data. Rather than write a script for each page, we'll write a loop that scrapes everything at once. 
+
+Note that if you click on a particular year, the url changes slightly. For example, it becomes "https://www.dllr.state.md.us/employment/warn2023.shtml" for 2023, "https://www.dllr.state.md.us/employment/warn2022.shtml" for 2022, etc. We can use that pattern to create a for loop in R and loop over the page for each year.
+
+One thing you need to be careful of is changing columns and data types from year to year. You can suss these out by exploring errors in your loop, or you can look at the webpages and see if the tables change. I'll save you some time by telling you there are some differences: 
+-   In 2010 the fifth column is "WIA Code" and it becomes "Local Area" in 2023
+-   In 2010 the last column is "Type Code" and it becomes "Type" in 2023
+-   Several columns that are strictly numbers in most years (WIA Code, Total Employees, etc) have text in other years, so everything should be text by default.
+
+```{r}
+# start by creating a vector of the items that change between urls, namely the year: 
+years <- 2010:2023
+
+# construct a "for loop" that 1) creates a url for each page, and 2) scrapes the page, 3) turns it into a table, 4) cleans the table, 5) renames column5 to "local_area" and column8 to "type". At the end of the loop we'll take the resulting table and add it all into one large table. Because our final table has to live outside of the loop (what happens in a loop stays in a loop unless you pass it outside), we'll create an empty container for it: 
+full_table <- NULL
+
+for (y in years) {
+  
+  
+}
+
+```
+
+To finish this off, append the original `table` to the `full_table` you just created: 
+```{r}
+full_table <- rbind(full_table, table)
+```
+
+Voila! You can export the final table as a csv:
+```{r}
+write_csv(full_table, "md_warn_final.csv")
+```

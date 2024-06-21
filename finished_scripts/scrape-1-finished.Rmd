@@ -1,0 +1,128 @@
+---
+title: "Scrape 1 Finished"
+output: 
+---
+
+Scrape the 2024 warn notices for the state of Maryland, from [https://www.dllr.state.md.us/employment/warn.shtml](https://www.dllr.state.md.us/employment/warn.shtml](https://www.dllr.state.md.us/employment/warn.shtml](https://www.dllr.state.md.us/employment/warn.shtml).
+
+Libraries: you'll use "rvest" to pull and parse HTML from a website, and "tidyverse" to clean and manipulate the data you scrape into a tidy table (a "tibble" in tidyverse lingo). 
+
+If you need to install these packages, run the following code chunk: 
+```{r}
+install.packages(c("tidyverse","rvest","janitor"))
+```
+
+Load the packages:
+```{r}
+library(tidyverse)
+library(rvest)
+library(janitor)
+```
+
+### Step One: read the html table from the main page
+
+Read the source HTML from the webpage:
+```{r}
+url <- "https://www.dllr.state.md.us/employment/warn.shtml"
+
+html <- read_html(url)
+```
+
+The entire HTML document from that webpage is now in your R environment, but it's not easy to view in this form. It says "List of 2" because it's reading the highest-level tags in the HTML: <head> and <body>. The rest of it is there as well, but it's easier to use Chrome Inspect to sift through the HTML as you figure out what elements you need to pull. 
+
+To pull a particular element, use the html_element() or html_elements() function. The first grabs all the matching elements and gives them to you in a flat vector; the second returns all the elements in a nodeset. (If this doesn't make sense, don't worry about it). 
+
+For this website, the data is conveniently inside of a <table> tag, so that's the element you'll pull:
+```{r}
+html |> html_element("table")
+```
+
+There it is! It's not a nice tidy table yet, but you can see the data buried in <tr> and <td> tags. 
+Thankfully you don't have to do much to parse this, other than use the html_table() function. 
+
+```{r}
+html |> html_element("table") |> html_table()
+```
+
+Note that the header row is part of the data. This is because those values aren't baked into <th> tags (which indicate table header), but regular <tr> tags (table row). So add an argument to html_table() so it recognizes the first row as a header: 
+```{r}
+# test it out
+html |> html_element("table") |> html_table(header=T)
+
+# make it permanent
+table <- html |> html_element("table") |> html_table(header=T)
+
+```
+
+We need to do a few things to clean up this table: 
+-   If you look at `Company`, `Location`, and `Local Area` you'll see there are `\r\n` characters baked in; you can use the stringr package (in tidyverse) to clean those up. 
+-   I also like to standardize column names so they don't have spaces or capital letters, using the clean_names() function from the janitor package.
+-   Turn every column to character (trust me on this, it will make sense later): 
+```{r}
+# test it out: removing white space
+table |> 
+  mutate(Company = str_squish(Company), 
+         Location = str_squish(Location),
+         `Local Area` = str_squish(`Local Area`))
+
+# test it out: cleaning headers
+table |> 
+  clean_names()
+
+# test it out: turning everything to character
+table |> 
+  mutate(across(1:8, as.character))
+
+# make it permanent
+table <- table |> 
+  clean_names() |>
+  mutate(across(1:8, as.character)) |> 
+  mutate(company = str_squish(company), 
+         location = str_squish(location),
+         local_area = str_squish(local_area))
+```
+
+Voila! You can export the clean table as a csv:
+```{r}
+write_csv("md_warn_final.csv")
+```
+
+### Step Two: scrape multiple pages
+
+Notice at the bottom of the page there is a gray bar that says "Work Adjustment and Retraining Notifications (WARN)"; when you click the bar it expands to show you more years of data. Rather than write a script for each page, we'll write a loop that scrapes everything at once. 
+
+Note that if you click on a particular year, the url changes slightly. For example, it becomes "https://www.dllr.state.md.us/employment/warn2023.shtml" for 2023, "https://www.dllr.state.md.us/employment/warn2022.shtml" for 2022, etc. We can use that pattern to create a for loop in R and loop over the page for each year.
+
+One thing you need to be careful of is changing columns and data types from year to year. You can suss these out by exploring errors in your loop, or you can look at the webpages and see if the tables change. I'll save you some time by telling you there are some differences: 
+-   In 2010 the fifth column is "WIA Code" and it becomes "Local Area" in 2023
+-   In 2010 the last column is "Type Code" and it becomes "Type" in 2023
+-   Several columns that are strictly numbers in most years (WIA Code, Total Employees, etc) have text in other years, so everything should be text by default.
+
+```{r}
+# start by creating a vector of the items that change between urls, namely the year: 
+years <- 2010:2023
+
+# construct a for loop that loops through all the years, creates a url, and scrapes each page. At the end of the loop we'll take the resulting data and add it all into one large table. Because our final table has to live outside of the loop (what happens in a loop stays in a loop unless you pass it outside), we'll create an empty container for it: 
+full_table <- NULL
+
+for (y in years) {
+  url2 <- paste0("https://www.dllr.state.md.us/employment/warn",y,".shtml")
+  html2 <- read_html(url2)
+  table2 <- html2 |> 
+    html_element("table") |> 
+    html_table(header=T)  |> 
+    clean_names() |> 
+    mutate(across(1:8, as.character)) |> 
+    mutate(company = str_squish(company),
+           location = str_squish(location)) |> 
+    rename(local_area = 5, type = 8)
+  full_table <- bind_rows(full_table, table2)
+}
+
+```
+
+To finish this off, let's append our original `table` to the `full_table` we just created: 
+```{r}
+full_table <- rbind(full_table, table)
+```
+
