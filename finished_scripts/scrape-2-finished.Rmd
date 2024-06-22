@@ -21,7 +21,8 @@ html <- read_html(url)
 html_table <- html |> html_elements("table")
 
 final_table <- 
-  table |> html_table()
+  html |> html_element("table") |> 
+  html_table(header=T)
 ```
 
 At this point if you use html_table() you will wipe out all attributes. You need to extract them first.
@@ -30,7 +31,7 @@ The links live inside an <a> tag within the first <td> tag for each row:
 
 ```{r}
 # test it out:
-table |>
+html_table |>
   html_elements("a") |> 
   html_attr("href")
 
@@ -43,6 +44,6 @@ links <- html %>%
 links_col <- append(links, replicate(20, NA)) %>% as_tibble()
 
 # bind this column of links to the original table: 
-bind_cols(final_table, links_col)
+final_table <- bind_cols(final_table, links_col)
 ```
 
