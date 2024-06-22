@@ -1,0 +1,48 @@
+---
+title: "Scrape 2 finished"
+output: 
+---
+
+Scrape the warn notices for the state of South Dakota, from <https://dlr.sd.gov/workforce_services/businesses/warn_notices.aspx>.
+
+This scrape, while similar to the MD WARN, presents the problem of scraping links from the table. Links are stored as attributes inside of <a> tags, so you'll use the html_attr() function to pull them out. To start, though, the code is similar to MD WARN: 
+
+```{r}
+library(tidyverse)
+library(rvest)
+```
+
+This section of the code is nearly identical:
+```{r}
+url <- "https://dlr.sd.gov/workforce_services/businesses/warn_notices.aspx"
+
+html <- read_html(url)
+
+html_table <- html |> html_elements("table")
+
+final_table <- 
+  table |> html_table()
+```
+
+At this point if you use html_table() you will wipe out all attributes. You need to extract them first.
+The links live inside an <a> tag within the first <td> tag for each row: 
+`<a href="/workforce_services/businesses/warn_notices/target-corp-sioux-falls.pdf" title="Target Corporation WARN Notice" target="_blank">Target Corporation</a>`. It's the "href" attribute that holds the actual link. Use html_elements() to find the <a> tags and html_attr() to pull the link associated with "href":
+
+```{r}
+# test it out:
+table |>
+  html_elements("a") |> 
+  html_attr("href")
+
+# pull out the links into their own column:
+links <- html %>% 
+  html_elements("table a") %>% 
+  html_attr("href")
+
+# because there aren't links for every row, only the first 48, we need to fill out the data with NAs using replicate():
+links_col <- append(links, replicate(20, NA)) %>% as_tibble()
+
+# bind this column of links to the original table: 
+bind_cols(final_table, links_col)
+```
+

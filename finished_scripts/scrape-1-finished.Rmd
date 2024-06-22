@@ -3,7 +3,7 @@ title: "Scrape 1 Finished"
 output: 
 ---
 
-Scrape the 2024 warn notices for the state of Maryland, from [https://www.dllr.state.md.us/employment/warn.shtml](https://www.dllr.state.md.us/employment/warn.shtml](https://www.dllr.state.md.us/employment/warn.shtml](https://www.dllr.state.md.us/employment/warn.shtml).
+Scrape the 2024 warn notices for the state of Maryland, from [https://www.dllr.state.md.us/employment/warn.shtml](https://www.dllr.state.md.us/employment/warn.shtml].
 
 Libraries: you'll use "rvest" to pull and parse HTML from a website, and "tidyverse" to clean and manipulate the data you scrape into a tidy table (a "tibble" in tidyverse lingo). 
 
